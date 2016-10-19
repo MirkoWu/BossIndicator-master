@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 修改了textsize
+ */
 public class MainActivity extends AppCompatActivity {
     private BossIndicator mIndicator;
     private ViewPager mViewPager;
