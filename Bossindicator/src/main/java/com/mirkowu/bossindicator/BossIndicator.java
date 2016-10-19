@@ -16,7 +16,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -157,7 +156,10 @@ public class BossIndicator extends LinearLayout {
         mTabVisibleCount = a.getInt(R.styleable.BossIndicator_boss_item_visible_count, D_TAB_COUNT);
         mTextColorNormal = a.getColor(R.styleable.BossIndicator_boss_text_color_normal, D_TEXT_COLOR_NORMAL);
         mTextColorHighlight = a.getColor(R.styleable.BossIndicator_boss_text_color_hightlight, D_TEXT_COLOR_HIGHLIGHT);
-        mTextSize = a.getDimensionPixelSize(R.styleable.BossIndicator_boss_text_size, 16);
+        int  textSize = a.getDimensionPixelSize(R.styleable.BossIndicator_boss_text_size, -1);
+        if (textSize != -1) {
+            this.mTextSize = px2sp(context, textSize);
+        }
         mIndicatorColor = a.getColor(R.styleable.BossIndicator_boss_indicator_color, D_INDICATOR_COLOR);
         mIndicatorStyle = a.getInt(R.styleable.BossIndicator_boss_indicator_style, STYLE_LINE);
 
@@ -194,6 +196,16 @@ public class BossIndicator extends LinearLayout {
 
     }
 
+    /**
+     * px2sp
+     * @param context
+     * @param pxValue
+     * @return
+     */
+    public static int px2sp(Context context, float pxValue) {
+        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (pxValue / fontScale + 0.5f);
+    }
     /**
      * 初始化指示器
      */
@@ -462,7 +474,7 @@ public class BossIndicator extends LinearLayout {
         tv.setGravity(Gravity.CENTER);
         tv.setTextColor(mTextColorNormal);
         tv.setText(text);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, mTextSize);
+        tv.setTextSize(mTextSize);
         tv.setLayoutParams(lp);
         return tv;
     }
