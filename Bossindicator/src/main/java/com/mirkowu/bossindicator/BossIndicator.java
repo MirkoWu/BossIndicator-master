@@ -16,6 +16,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -67,7 +68,7 @@ public class BossIndicator extends LinearLayout {
     /**
      * 可见tab数量
      */
-    private int mTabVisibleCount = D_TAB_COUNT;
+    private int mTabVisibleCount = -1;
 
     /**
      * 与之绑定的ViewPager
@@ -117,7 +118,17 @@ public class BossIndicator extends LinearLayout {
     /**
      * 指示器宽
      */
-    private int mIndicatorWidth = getWidth() / mTabVisibleCount;
+    // private int mIndicatorWidth = getWidth() / mTabVisibleCount;
+    private int mIndicatorWidth = 70;
+    /***
+     * 最长的tab的宽度
+     */
+    private int mMaxTabWidth;
+    /**
+     * 各个tab间的padding
+     */
+    private int mPadding = 15;
+
 
     /**
      * 三角形的宽度为单个Tab的1/6
@@ -153,12 +164,12 @@ public class BossIndicator extends LinearLayout {
         // 获得自定义属性
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BossIndicator);
 
-        mTabVisibleCount = a.getInt(R.styleable.BossIndicator_boss_item_visible_count, D_TAB_COUNT);
+        mTabVisibleCount = a.getInt(R.styleable.BossIndicator_boss_item_visible_count, -1);
         mTextColorNormal = a.getColor(R.styleable.BossIndicator_boss_text_color_normal, D_TEXT_COLOR_NORMAL);
         mTextColorHighlight = a.getColor(R.styleable.BossIndicator_boss_text_color_hightlight, D_TEXT_COLOR_HIGHLIGHT);
-        int  textSize = a.getDimensionPixelSize(R.styleable.BossIndicator_boss_text_size, -1);
+        int textSize = a.getDimensionPixelSize(R.styleable.BossIndicator_boss_text_size, -1);
         if (textSize != -1) {
-            this.mTextSize = px2sp(context, textSize);
+            this.mTextSize = DisplayUtil.px2sp(context, textSize);
         }
         mIndicatorColor = a.getColor(R.styleable.BossIndicator_boss_indicator_color, D_INDICATOR_COLOR);
         mIndicatorStyle = a.getInt(R.styleable.BossIndicator_boss_indicator_style, STYLE_LINE);
@@ -197,16 +208,6 @@ public class BossIndicator extends LinearLayout {
     }
 
     /**
-     * px2sp
-     * @param context
-     * @param pxValue
-     * @return
-     */
-    public static int px2sp(Context context, float pxValue) {
-        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
-        return (int) (pxValue / fontScale + 0.5f);
-    }
-    /**
      * 初始化指示器
      */
     @Override
@@ -218,7 +219,7 @@ public class BossIndicator extends LinearLayout {
             case STYLE_LINE:
 
 			/*
-			 * 下划线指示器:宽与item相等,高是item的1/10
+             * 下划线指示器:宽与item相等,高是item的1/10
 			 */
                 mIndicatorWidth = w / mTabVisibleCount;
                 mIndicatorHeight = h / 10;
@@ -230,7 +231,7 @@ public class BossIndicator extends LinearLayout {
             case STYLE_BITMAP:
 
 			/*
-			 * 方形/图标指示器:宽,高与item相等
+             * 方形/图标指示器:宽,高与item相等
 			 */
                 mIndicatorWidth = w / mTabVisibleCount;
                 mIndicatorHeight = h;
@@ -241,12 +242,13 @@ public class BossIndicator extends LinearLayout {
             case STYLE_TRIANGLE:
 
 			/*
-			 * 三角形指示器:宽与item(1/4)相等,高是item的1/4
+             * 三角形指示器:宽与item(1/4)相等,高是item的1/4
 			 */
                 //mIndicatorWidth = w / mTabVisibleCount / 4;
                 // mIndicatorHeight = h / 4;
                 mIndicatorWidth = (int) (w / mTabVisibleCount * RADIO_TRIANGEL);// 1/6 of  width  ;
-                mIndicatorHeight = (int) (mIndicatorWidth / 2 / Math.sqrt(2)); ;
+                mIndicatorHeight = (int) (mIndicatorWidth / 2 / Math.sqrt(2));
+                ;
                 mTranslationX = 0;
 
                 break;
@@ -307,6 +309,62 @@ public class BossIndicator extends LinearLayout {
         super.dispatchDraw(canvas);
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        int childCount = this.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = this.getChildAt(i);
+            int childWidth = child.getMeasuredWidth() /*+ child.getPaddingLeft() + child.getPaddingRight()*//*+mPadding * 2*/;
+
+            //最长的一个tab宽度作为宽度
+            mMaxTabWidth = childWidth > mMaxTabWidth ? childWidth : mMaxTabWidth;
+        }
+
+        //默认显示所有，否则填入几个就显示几个
+        int tabvisibleCount = mTabVisibleCount != -1 ? mTabVisibleCount : childCount;
+        int width = mMaxTabWidth * tabvisibleCount;
+
+        int widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
+        int widthSpecSize = MeasureSpec.getSize(widthMeasureSpec);
+        Log.d("measure", "width=" + width + "  widthSpecSize=" + widthSpecSize);
+
+        switch (widthSpecMode) {
+            case MeasureSpec.EXACTLY://match_partent   10dp
+                width = Math.max(width, widthSpecSize);
+                mMaxTabWidth = width / tabvisibleCount;
+                break;
+            case MeasureSpec.UNSPECIFIED://未指定
+            case MeasureSpec.AT_MOST://wrap_content
+                width = Math.min(width, widthSpecSize);
+
+                break;
+        }
+
+        setMeasuredDimension(width, heightMeasureSpec);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        int left = 0;
+
+        int childCount = this.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = this.getChildAt(i);
+
+            LayoutParams lParams = (LayoutParams) child.getLayoutParams();
+            lParams.width = mMaxTabWidth;
+            lParams.gravity = Gravity.CENTER;
+            child.setLayoutParams(lParams);
+            child.setPadding(mPadding, child.getPaddingTop(), mPadding, child.getPaddingBottom());
+
+            child.layout(left, t, left + mMaxTabWidth, b);
+            left += mMaxTabWidth;
+        }
+    }
+
     /**
      * 设置tab上的内容
      *
@@ -314,6 +372,7 @@ public class BossIndicator extends LinearLayout {
      */
     public void setTabItemTitles(List<String> datas) {
         this.mTabTitles = datas;
+        initTabItem();//初始化
     }
 
     /**
@@ -369,7 +428,6 @@ public class BossIndicator extends LinearLayout {
     }
 
     /**
-     *
      * 初始化tabItem
      *
      * @author Ruffian
@@ -377,6 +435,9 @@ public class BossIndicator extends LinearLayout {
     private void initTabItem() {
 
         if (mTabTitles != null && mTabTitles.size() > 0) {
+            // 默认全部显示 当用户填入时就按填入的值
+            if (mTabVisibleCount == -1) mTabVisibleCount = mTabTitles.size();
+
             if (this.getChildCount() != 0) {
                 this.removeAllViews();
             }
@@ -384,6 +445,10 @@ public class BossIndicator extends LinearLayout {
             for (String title : mTabTitles) {
                 addView(createTextView(title));
             }
+
+            requestLayout();//重新摆放
+
+            invalidate();
 
             // 设置点击事件
             setItemClickEvent();
@@ -434,11 +499,8 @@ public class BossIndicator extends LinearLayout {
      * @param offset
      */
     private void onScoll(int position, float offset) {
-
         // 不断改变偏移量，invalidate
-        mTranslationX = getWidth() / mTabVisibleCount * (position + offset);
-
-        int tabWidth = getWidth() / mTabVisibleCount;
+        mTranslationX = mMaxTabWidth * (position + offset);
 
         // 容器滚动，当移动到倒数第二个的时候，开始滚动
         if (offset > 0 && position >= (mTabVisibleCount - 2)
@@ -446,13 +508,14 @@ public class BossIndicator extends LinearLayout {
                 && position < (getChildCount() - 2)) {
             if (mTabVisibleCount != 1) {
 
-                int xValue = (position - (mTabVisibleCount - 2)) * tabWidth
-                        + (int) (tabWidth * offset);
+                int xValue = (position - (mTabVisibleCount - 2)) * mMaxTabWidth
+                        + (int) (mMaxTabWidth * offset);
+
                 this.scrollTo(xValue, 0);
 
             } else {
                 // 为count为1时 的特殊处理
-                this.scrollTo(position * tabWidth + (int) (tabWidth * offset),
+                this.scrollTo(position * mMaxTabWidth + (int) (mMaxTabWidth * offset),
                         0);
             }
         }
@@ -468,13 +531,17 @@ public class BossIndicator extends LinearLayout {
      */
     private TextView createTextView(String text) {
         TextView tv = new TextView(getContext());
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        lp.width = getWidth() / mTabVisibleCount;
-        tv.setGravity(Gravity.CENTER);
-        tv.setTextColor(mTextColorNormal);
+
+        LayoutParams lp = new LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+        // lp.width = mMaxTabWidth;
+        // lp.leftMargin = mMargin;
+        // lp.rightMargin = mMargin;
+        tv.setPadding(mPadding, mPadding, mPadding, mPadding);
         tv.setText(text);
         tv.setTextSize(mTextSize);
+        tv.setGravity(Gravity.CENTER);
+        tv.setTextColor(mTextColorNormal);
         tv.setLayoutParams(lp);
         return tv;
     }
@@ -483,7 +550,6 @@ public class BossIndicator extends LinearLayout {
      * 对外的ViewPager的回调接口
      *
      * @author Ruffian
-     *
      */
     public interface PageChangeListener {
         public void onPageScrolled(int position, float positionOffset,

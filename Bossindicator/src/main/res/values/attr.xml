@@ -2,15 +2,6 @@
 <resources>
     <!-- BossIndicator -->
     <declare-styleable name="BossIndicator">
-        <!--  <attr name="boss_item_count" />
-          <attr name="boss_text_color_normal" />
-          <attr name="boss_text_color_hightlight" />
-          <attr name="boss_text_size" />
-          <attr name="boss_indicator_color" />
-          <attr name="boss_indicator_src" />
-          <attr name="boss_indicator_style" />
-  -->
-
         <attr name="boss_item_visible_count" format="integer" />
         <attr name="boss_text_color_normal" format="color" />
         <attr name="boss_text_color_hightlight" format="color" />
