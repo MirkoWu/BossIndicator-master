@@ -433,10 +433,14 @@ public class BossIndicator extends LinearLayout {
      * @author Ruffian
      */
     private void initTabItem() {
-
-        if (mTabTitles != null && mTabTitles.size() > 0) {
+        int size = mTabTitles.size();
+        if (mTabTitles != null && size > 0) {
             // 默认全部显示 当用户填入时就按填入的值
-            if (mTabVisibleCount == -1) mTabVisibleCount = mTabTitles.size();
+            if (mTabVisibleCount == -1) {
+                mTabVisibleCount = size;
+            } else if (size < mTabVisibleCount) {//如果填入的值小于真实值 按真实值
+                mTabVisibleCount = size;
+            }
 
             if (this.getChildCount() != 0) {
                 this.removeAllViews();
