@@ -433,29 +433,31 @@ public class BossIndicator extends LinearLayout {
      * @author Ruffian
      */
     private void initTabItem() {
-        int size = mTabTitles.size();
-        if (mTabTitles != null && size > 0) {
-            // 默认全部显示 当用户填入时就按填入的值
-            if (mTabVisibleCount == -1) {
-                mTabVisibleCount = size;
-            } else if (size < mTabVisibleCount) {//如果填入的值小于真实值 按真实值
-                mTabVisibleCount = size;
+        if (mTabTitles != null) {
+            int size = mTabTitles.size();
+            if (size > 0) {
+                // 默认全部显示 当用户填入时就按填入的值
+                if (mTabVisibleCount == -1) {
+                    mTabVisibleCount = size;
+                } else if (size < mTabVisibleCount) {//如果填入的值小于真实值 按真实值
+                    mTabVisibleCount = size;
+                }
+
+                if (this.getChildCount() != 0) {
+                    this.removeAllViews();
+                }
+
+                for (String title : mTabTitles) {
+                    addView(createTextView(title));
+                }
+
+                requestLayout();//重新摆放
+
+                invalidate();
+
+                // 设置点击事件
+                setItemClickEvent();
             }
-
-            if (this.getChildCount() != 0) {
-                this.removeAllViews();
-            }
-
-            for (String title : mTabTitles) {
-                addView(createTextView(title));
-            }
-
-            requestLayout();//重新摆放
-
-            invalidate();
-
-            // 设置点击事件
-            setItemClickEvent();
         }
 
     }
