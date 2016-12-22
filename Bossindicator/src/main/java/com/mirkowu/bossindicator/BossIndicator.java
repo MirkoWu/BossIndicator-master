@@ -16,7 +16,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -154,6 +153,7 @@ public class BossIndicator extends LinearLayout {
      * viewPage初始下标
      */
     private int mPosition = 0;
+    private String TAG = "BossIndicator ";
 
     public BossIndicator(Context context) {
         this(context, null);
@@ -328,7 +328,7 @@ public class BossIndicator extends LinearLayout {
 
         int widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSpecSize = MeasureSpec.getSize(widthMeasureSpec);
-        Log.d("measure", "width=" + width + "  widthSpecSize=" + widthSpecSize);
+        // Log.d("measure", "width=" + width + "  widthSpecSize=" + widthSpecSize);
 
         switch (widthSpecMode) {
             case MeasureSpec.EXACTLY://match_partent   10dp
@@ -453,7 +453,7 @@ public class BossIndicator extends LinearLayout {
 
                 requestLayout();//重新摆放
 
-                invalidate();
+                postInvalidate();
 
                 // 设置点击事件
                 setItemClickEvent();
@@ -538,12 +538,14 @@ public class BossIndicator extends LinearLayout {
     private TextView createTextView(String text) {
         TextView tv = new TextView(getContext());
 
-        LayoutParams lp = new LayoutParams(
-                LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+        LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT,
+                LayoutParams.MATCH_PARENT);
         // lp.width = mMaxTabWidth;
         // lp.leftMargin = mMargin;
         // lp.rightMargin = mMargin;
+
         tv.setPadding(mPadding, mPadding, mPadding, mPadding);
+        lp.gravity = Gravity.CENTER;
         tv.setText(text);
         tv.setTextSize(mTextSize);
         tv.setGravity(Gravity.CENTER);
